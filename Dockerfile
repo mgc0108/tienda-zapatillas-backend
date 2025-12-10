@@ -7,3 +7,4 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-install pdo pdo_pgsql
 
 COPY . /var/www/html/
+# Esto es un cambio para forzar el redeploy
