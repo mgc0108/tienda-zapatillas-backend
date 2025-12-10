@@ -8,3 +8,4 @@ RUN docker-php-ext-install pdo pdo_pgsql
 
 COPY . /var/www/html/
 # Esto es un cambio para forzar el redeploy
+# Esto es un cambio para forzar el redeploy y aplicar la variable DATABASE_URL
