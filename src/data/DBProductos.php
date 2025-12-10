@@ -1,62 +1,70 @@
 <?php
+// Asegúrate de que este archivo contiene la función conectarDB() que devuelve un objeto PDO
+require_once 'ConexionDB.php';
 
-require_once __DIR__ . '/ConexionDB.php';
-
+/**
+ * Obtiene todos los productos de la base de datos.
+ * Versión PDO compatible.
+ */
 function obtenerTodosLosProductos() {
-    $db = conectarDB();
-    if (!$db) {
-        die("ERROR FATAL: La función conectarDB() devolvió null.");
+    $conexion = conectarDB();
+    if (!$conexion) {
+        return [];
     }
 
-    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen FROM productos ORDER BY id DESC";
-    $resultado = $db->query($sql);
+    $sql = "SELECT id, nombre, descripcion, precio, imagen_url FROM productos";
     
-    if (!$resultado) {
-        die("Error en la consulta SQL: " . $db->error . "<br>SQL ejecutada: " . htmlspecialchars($sql));
-    }
+    try {
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute();
+        
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if ($resultado->num_rows == 0) {
-        die("DEPURACIÓN: La consulta se ejecutó, pero devolvió 0 productos. Revisa tu tabla 'productos' en phpMyAdmin.");
-    }
-    
-    $productos = [];
-    
-    if ($resultado && $resultado->num_rows > 0) {
-        while ($fila = $resultado->fetch_assoc()) {
-            $productos[] = $fila;
+        // DEPURACIÓN: Contar cuántos resultados se obtuvieron (usando count() en lugar de num_rows)
+        if (count($productos) > 0) {
+            return $productos;
+        } else {
+            // Este mensaje se mostrará si la conexión es exitosa pero la tabla está vacía.
+            echo "DEPURACIÓN: La consulta se ejecutó, pero devolvió 0 productos. Revisa tu tabla 'productos' en DBeaver o en el panel de Render.";
+            return [];
         }
+    } catch (PDOException $e) {
+        error_log("Error al obtener productos: " . $e->getMessage());
+        return [];
     }
-    
-    $db->close();
-    return $productos;
 }
 
+/**
+ * Obtiene un producto por su ID.
+ * Versión PDO compatible.
+ */
 function obtenerProductoPorId(int $id) {
     $db = conectarDB();
     if (!$db) {
         return null;
     }
 
-    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen FROM productos WHERE id = ?";
+    // Nota: Usamos imagen_url en lugar de imagen (asumiendo que así está en la BD)
+    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen_url FROM productos WHERE id = ?";
     $stmt = $db->prepare($sql);
     
     if ($stmt) {
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
+        // Ejecución con parámetros pasados como array
+        $stmt->execute([$id]);
         
-        $producto = $resultado->fetch_assoc();
+        // fetch() para un solo resultado, equivalente a fetch_assoc()
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        $stmt->close();
-        $db->close();
-        
-        return $producto;
+        return $producto ?: null; // Devuelve el producto o null si no se encuentra
     }
     
-    $db->close();
     return null;
 }
 
+/**
+ * Obtiene varios productos por un array de IDs.
+ * Versión PDO compatible.
+ */
 function obtenerProductosPorIds(array $ids) {
     if (empty($ids)) {
         return [];
@@ -67,46 +75,50 @@ function obtenerProductosPorIds(array $ids) {
         return [];
     }
     
+    // Crear los placeholders (?) para la cláusula IN
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen FROM productos WHERE id IN ($placeholders)";
+    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen_url FROM productos WHERE id IN ($placeholders)";
     
     $stmt = $db->prepare($sql);
-    $types = str_repeat('i', count($ids)); 
-
+    
     if ($stmt) {
-        $stmt->bind_param($types, ...$ids);
-        $stmt->execute();
-        $resultado = $stmt->get_result();
+        // Los IDs se pasan directamente al execute()
+        $stmt->execute($ids); 
         
-        $productos = [];
-        while ($fila = $resultado->fetch_assoc()) {
-            $productos[] = $fila;
-        }
-        $stmt->close();
-        $db->close();
+        // Obtener todos los resultados
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
         return $productos;
     }
-    $db->close();
     return [];
 }
 
+/**
+ * Resta stock a un producto.
+ * Versión PDO compatible (usa rowCount()).
+ */
 function restarStockProducto($db, int $id_producto, int $cantidad) {
-    
+    // Nota: $db debe ser el objeto PDO ya conectado
+
     $sql = "UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?";
     $stmt = $db->prepare($sql);
     
     if ($stmt) {
-        $stmt->bind_param("iii", $cantidad, $id_producto, $cantidad);
+        // Los parámetros se pasan a execute()
+        $resultado = $stmt->execute([$cantidad, $id_producto, $cantidad]);
         
-        $resultado = $stmt->execute();
-        $filas_afectadas = $stmt->affected_rows;
-        $stmt->close();
+        // PDO usa rowCount() para saber las filas afectadas
+        $filas_afectadas = $stmt->rowCount(); 
         
         return $resultado && $filas_afectadas === 1;
     }
     return false;
 }
 
+/**
+ * Guarda o actualiza un producto.
+ * Versión PDO compatible.
+ */
 function guardarProducto(array $datos) {
     $db = conectarDB();
     if (!$db) {
@@ -118,34 +130,36 @@ function guardarProducto(array $datos) {
     $descripcion = $datos['descripcion'];
     $precio = (float)$datos['precio'];
     $stock = (int)$datos['stock'];
-    $imagen = $datos['imagen'];
+    // Se usa 'imagen_url' como campo, aunque se podría recibir como 'imagen'
+    $imagen_url = $datos['imagen_url'] ?? $datos['imagen'] ?? null; 
 
     $resultado = false;
 
     if ($id) {
-        $sql = "UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, stock = ?, imagen = ? WHERE id = ?";
+        // UPDATE (Actualizar)
+        $sql = "UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, stock = ?, imagen_url = ? WHERE id = ?";
         $stmt = $db->prepare($sql);
         
         if ($stmt) {
-            $stmt->bind_param("ssdisi", $nombre, $descripcion, $precio, $stock, $imagen, $id);
-            $resultado = $stmt->execute();
-            $stmt->close();
+            $resultado = $stmt->execute([$nombre, $descripcion, $precio, $stock, $imagen_url, $id]);
         }
     } else {
-        $sql = "INSERT INTO productos (nombre, descripcion, precio, stock, imagen) VALUES (?, ?, ?, ?, ?)";
+        // INSERT (Insertar nuevo)
+        $sql = "INSERT INTO productos (nombre, descripcion, precio, stock, imagen_url) VALUES (?, ?, ?, ?, ?)";
         $stmt = $db->prepare($sql);
 
         if ($stmt) {
-            $stmt->bind_param("ssdis", $nombre, $descripcion, $precio, $stock, $imagen);
-            $resultado = $stmt->execute();
-            $stmt->close();
+            $resultado = $stmt->execute([$nombre, $descripcion, $precio, $stock, $imagen_url]);
         }
     }
 
-    $db->close();
     return $resultado;
 }
 
+/**
+ * Elimina un producto por su ID.
+ * Versión PDO compatible.
+ */
 function eliminarProducto(int $id) {
     $db = conectarDB();
     if (!$db) {
@@ -156,15 +170,13 @@ function eliminarProducto(int $id) {
     $stmt = $db->prepare($sql);
 
     if ($stmt) {
-        $stmt->bind_param("i", $id);
-        $resultado = $stmt->execute();
-        $filas_afectadas = $stmt->affected_rows;
-        $stmt->close();
-        $db->close();
+        $resultado = $stmt->execute([$id]);
+        
+        // PDO usa rowCount()
+        $filas_afectadas = $stmt->rowCount(); 
         
         return $resultado && $filas_afectadas === 1; 
     }
 
-    $db->close();
     return false;
 }
