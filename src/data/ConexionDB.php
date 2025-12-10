@@ -38,14 +38,10 @@ function conectarDB() {
     parse_str($query, $query_params);
     $sslmode = $query_params['sslmode'] ?? '';
 
-    // --- Cadena de Conexión DSN para PDO ---
-    // Incluir el puerto en el DSN
-    $dsn = "pgsql:host=$host;port=$port;dbname=$db;user=$usuario;password=$password";
 
-    // Añadir sslmode si existe (es necesario para la URL pública)
-    if ($sslmode) {
-        $dsn .= ";sslmode=$sslmode";
-    }
+    // --- Cadena de Conexión DSN para PDO (SSL FORZADO) ---
+    // Render requiere sslmode=require para conexiones externas
+    $dsn = "pgsql:host=$host;port=$port;dbname=$db;user=$usuario;password=$password;sslmode=require";
 
     try {
         // Crear la conexión PDO
