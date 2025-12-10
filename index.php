@@ -137,4 +137,3 @@ if (!isset($_SESSION['carrito'])) {
 
 </body>
 </html>
-// Esto es un cambio de prueba final
