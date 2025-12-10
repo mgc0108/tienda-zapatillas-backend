@@ -58,4 +58,5 @@ function conectarDB() {
         echo "Error de conexión a la base de datos de Render: " . $e->getMessage();
         die();
     }
+    //h
 }
