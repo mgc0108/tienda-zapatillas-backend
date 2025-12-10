@@ -4,8 +4,8 @@ require_once 'ConexionDB.php';
 
 function obtenerTodosLosProductos() {
     $conexion = conectarDB();
-
-    $sql = "SELECT id, nombre, descripcion, precio, imagen_url FROM productos";
+    
+    $sql = "SELECT id, nombre, descripcion, precio, stock, imagen FROM productos";
     
     $resultado = $conexion->query($sql);
     
@@ -17,7 +17,6 @@ function obtenerTodosLosProductos() {
         $resultado->close();
         return $productos;
     } else {
-        echo "DEPURACIÓN: La consulta se ejecutó, pero devolvió 0 productos. Revisa tu tabla 'productos' en phpMyAdmin.";
         return [];
     }
 }
