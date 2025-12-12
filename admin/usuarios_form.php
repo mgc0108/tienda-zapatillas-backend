@@ -2,6 +2,7 @@
 session_start();
 
 $base_url = '/Proyectos/TiendaZapatillas/';
+//control de acceso y verificación para vistas de administrador
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'admin') {
     header('Location: ' . $base_url . 'login.php?error=Acceso denegado.');
@@ -9,23 +10,24 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'admin') {
 }
 
 require_once __DIR__ . '/../src/data/DBUsuarios.php';
-
+//inicialización del estado (modo crear)
 $usuario = [
-    'id' => null,
+    'id' => null, //indica que es un nuevo registro
     'nombre' => '',
     'email' => '',
     'rol' => 'cliente'
 ];
 $accion = 'Crear';
-
+//lógiva para modo edición (si hay un ID en la  URL)
 if (isset($_GET['id'])) {
     $id = (int)$_GET['id'];
-    $usuario_db = obtenerUsuarioPorId($id);
+    $usuario_db = obtenerUsuarioPorId($id); //consultar el usuario de la BD
     
     if ($usuario_db) {
-        $usuario = $usuario_db;
-        $accion = 'Editar';
+        $usuario = $usuario_db; //cargar datos si se encuentra
+        $accion = 'Editar'; //cambiar la acción del formulario
     } else {
+        //redirigir si el ID no corresponde a un usuario existente
         header('Location: admin_usuarios.php?error=usuario_no_encontrado');
         exit();
     }

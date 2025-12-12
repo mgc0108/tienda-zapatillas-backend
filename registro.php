@@ -1,6 +1,8 @@
 <?php
 
 session_start();
+//captura el parámetro 'error' que proviene del script de procesamiento (procesar_registro.php)
+//si la validación falla, por ejemplo, campos vacíos, contraseñas diferentes,etc.
 $mensaje_error = $_GET['error'] ?? null;
 ?>
 <!DOCTYPE html>

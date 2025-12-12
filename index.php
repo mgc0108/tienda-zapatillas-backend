@@ -1,13 +1,15 @@
 <?php
-
+//asegura que la sesión este iniciada 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
+//conexión a la capa de datos
+//incluye las funciones para obtener el catálogo de productos
 require_once __DIR__ . '/src/data/DBProductos.php';
-
+//para obtener los datos, llama a la BD para listar todos los productos disponibles
 $productos = obtenerTodosLosProductos();
-
+//inicialización del carrito
+//asegura que la variable de sesión 'carrito' exista, evitando errores posteriores
 if (!isset($_SESSION['carrito'])) {
     $_SESSION['carrito'] = [];
 }
@@ -129,7 +131,7 @@ if (!isset($_SESSION['carrito'])) {
         <?php 
             }
         } else {
-            
+            //mensaje si no hay productos disponibles en la BD
             echo "<p>Lo sentimos, no nos queda stock.</p>";
         }
         ?>

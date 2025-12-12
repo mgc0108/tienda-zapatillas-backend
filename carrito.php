@@ -7,12 +7,13 @@ require_once __DIR__ . '/src/data/DBProductos.php';
 $carrito_vacio = true;
 $productos_en_carrito = [];
 $total_carrito = 0;
-
+//lógica de carga del carrito
+//comprobar si la variable de sesión 'carrito' existe y tiene contenido
 if (isset($_SESSION['carrito']) && !empty($_SESSION['carrito'])) {
     $carrito_vacio = false;
-    
+    //obtener los IDs de los productos almacenados en la sesión
     $ids_productos = array_keys($_SESSION['carrito']);
-    
+    //llamar a la BD para obtener los datos frescos de los productos
     $productos_en_carrito = obtenerProductosPorIds($ids_productos);
 }
 

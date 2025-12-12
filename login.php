@@ -1,10 +1,14 @@
 <?php
-
+//inicialización de sesión
+//se verifica si la sesión ya ha sido iniciada
+//necesario para poder almacenar la información del usuario cuando se autentique
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $error_message = '';
+//manejo de mensajes de error
+//comprueba si existe el parámetro 'error' en la URL
 if (isset($_GET['error'])) {
     $error = $_GET['error'];
     if ($error === 'credenciales_invalidas') {

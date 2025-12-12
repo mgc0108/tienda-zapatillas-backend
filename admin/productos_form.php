@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'admin') {
     header('Location: ../login.php?error=Acceso denegado.');
     exit();
@@ -75,9 +76,11 @@ if ($producto_id && is_numeric($producto_id)) {
 
     <h1><?php echo $titulo_pagina; ?></h1>
 
-    <form action="procesar_productos.php" method="POST">
-        
+    <form action="procesar_productos.php" method="POST" enctype="multipart/form-data">
+
         <input type="hidden" name="id" value="<?php echo htmlspecialchars($producto['id']); ?>">
+        
+        <input type="hidden" name="imagen_actual" value="<?php echo htmlspecialchars($producto['imagen']); ?>">
 
         <label for="nombre">Nombre:</label>
         <input type="text" id="nombre" name="nombre" value="<?php echo htmlspecialchars($producto['nombre']); ?>" required>
@@ -91,11 +94,10 @@ if ($producto_id && is_numeric($producto_id)) {
         <label for="stock">Stock:</label>
         <input type="number" id="stock" name="stock" min="0" value="<?php echo htmlspecialchars($producto['stock']); ?>" required>
         
-        <label for="imagen">Nombre del Archivo de Imagen:</label>
-        <input type="text" id="imagen" name="imagen" value="<?php echo htmlspecialchars($producto['imagen']); ?>">
+        <label for="imagen_archivo">Seleccionar Imagen:</label>
+        <input type="file" id="imagen_archivo" name="imagen_archivo">
 
         <button type="submit"><?php echo $producto['id'] ? 'Guardar Cambios' : 'Crear Producto'; ?></button>
     </form>
-
-</body>
+    </body>
 </html>

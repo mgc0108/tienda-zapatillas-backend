@@ -1,14 +1,18 @@
 <?php
 
 session_start();
+//control de acceso
+//verifica que la sesión exista y que el rol del usuario sea admin
+//si falla, redirige al login con un mensaje de error de acceso
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'admin') {
     header('Location: ../login.php?error=Acceso denegado. Se requiere ser Administrador.');
     exit();
 }
+//conexion a la capa de datos
 
 require_once __DIR__ . '/../src/data/DBProductos.php';
-
+//obtener los datos: se llama a la función de la BD para listar todos los productos
 $productos = obtenerTodosLosProductos();
 
 ?>
@@ -79,6 +83,7 @@ $productos = obtenerTodosLosProductos();
             <?php
                 }
             } else {
+                //mensaje si la consulta a la BD no devuelve resultados
                 echo '<tr><td colspan="5">No hay productos registrados.</td></tr>';
             }
             ?>

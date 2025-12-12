@@ -2,14 +2,15 @@
 session_start();
 
 $base_url = '/Proyectos/TiendaZapatillas/';
-
+//control de acceso
+//solo permite el acceso si la sesión está activa y el rol es admin
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['rol'] !== 'admin') {
     header('Location: ' . $base_url . 'login.php?error=Acceso denegado. Se requiere ser Administrador.');
     exit();
 }
-
+//conexión a la capa de datos
 require_once __DIR__ . '/../src/data/DBUsuarios.php';
-
+//para obtener los datos llama a la función de la BD para obtener el listado de usuarios
 $usuarios = obtenerTodosLosUsuarios();
 
 ?>
@@ -61,6 +62,7 @@ $usuarios = obtenerTodosLosUsuarios();
         <tbody>
             <?php
             if (!empty($usuarios)) {
+                //itera sobre el array de usuarios obtenido de la base de datos
                 foreach ($usuarios as $usuario) {
             ?>
                     <tr>
@@ -76,6 +78,7 @@ $usuarios = obtenerTodosLosUsuarios();
             <?php
                 }
             } else {
+                //mensaje si no hay usuarios en la base de datos
                 echo '<tr><td colspan="5">No hay usuarios registrados.</td></tr>';
             }
             ?>
