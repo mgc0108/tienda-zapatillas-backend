@@ -1,23 +1,22 @@
 <?php
 
 function conectarDB() {
-//parámetros de conexión a la base de datos local
+    // Leemos las variables que configuramos en la pestaña Environment de Render
+    $host = getenv('DB_HOST');
+    $usuario = getenv('DB_USER');
+    $password = getenv('DB_PASS'); 
+    $db = getenv('DB_NAME');
 
-    $host = "localhost";
-    $usuario = "root";
-    $password = ""; //contraseña vacía por defecto en entorno local
-    $db = "tienda_zapatillas";
-//crear una nueva instancia de la conexión MySQLi
+    // Crear la conexión usando las variables de la nube
     $conexion = new mysqli($host, $usuario, $password, $db);
-//manejo de errores de conexión
-//comprueba si hubo un error al intentar conectarse
+
+    // Manejo de errores
     if ($conexion->connect_error) {
-//termina la ejecución del script y muestra un mensaje de error detallado
-        die("Error de conexión a la base de datos local (MySQL): " . $conexion->connect_error);
+        die("Error de conexión a la base de datos en la nube: " . $conexion->connect_error);
     }
-//configuración de codificación
-//establece el charset a UTF-8 para asegurar el correcto manejo de tildes, eñes y caracteres especiales
+
+    // Configuración de codificación para tildes y eñes
     $conexion->set_charset("utf8");
-//devolver el objeto de conexión para ser usado en otras funciones
+
     return $conexion;
 }
